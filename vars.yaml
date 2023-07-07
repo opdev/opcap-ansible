@@ -1,0 +1,8 @@
+auditplan: ["operatorinstall"]
+packages: []
+allinstallmodes: false
+extracrdirectory: ""
+detailedreports: false
+catalog_source: certified-operators
+catalog_source_namespace: openshift-marketplace
+cleanup: true

@@ -1,14 +1,14 @@
-# repository-template
-new repository description
+# opcap-ansible
+Contains Ansible playbooks for installing operators and checking status of the install.
 
 ## Usage
-usage description
+Set the following env vars:
 
-## Installation
-installation steps
+```
+K8S_AUTH_VERIFY_SSL=no    # If you have a self-signed cert for your cluster
+K8S_AUTH_API_KEY=<snip>   # Easiest is to create a service account with cluster-admin, and pull the token from there
+K8S_AUTH_HOST=https://api.my-cluster.domain:6443
+```
 
-## How to contribute
-steps
-
-## License
-license description and link
+Look over the vars.yaml and modify accordingly. If packages is empty, it will pull ALL packages
+from the catalog source.

@@ -1,0 +1,75 @@
+---
+- name: Generate full namespace
+  ansible.builtin.set_fact:
+    full_namespace: "opcap-{{ namespace }}-{{ item | lower }}"
+- name: Create main namespace
+  kubernetes.core.k8s:
+    name: "{{ full_namespace }}"
+    api_version: v1
+    kind: Namespace
+    definition:
+      metadata:
+        labels:
+          opdev: opcap
+    state: present
+- name: Create additional namespace - SingleNamespace or MultiNamespace
+  kubernetes.core.k8s:
+    name: "{{ [full_namespace, 'targetns1'] | join('-') }}"
+    api_version: v1
+    kind: Namespace
+    definition:
+      metadata:
+        labels:
+          opdev: opcap
+    state: present
+  when: item in ["SingleNamespace", "MultiNamespace"]
+- name: Create additional namespace - SingleNamespace or MultiNamespace
+  kubernetes.core.k8s:
+    name: "{{ [full_namespace, 'targetns2'] | join('-') }}"
+    api_version: v1
+    kind: Namespace
+    definition:
+      metadata:
+        labels:
+          opdev: opcap
+    state: present
+  when: item in ["MultiNamespace"]
+- name: Create operator group in kubernetes.core.k8s
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ full_namespace }}"
+    resource_definition: "{{ lookup('template',
+      'templates/operator-group.yml.j2',
+      template_vars=dict(operator_namespace=full_namespace,manifest_data=manifest_data,channel=channel,install_mode=item)) }}"
+- name: Create Subscription for operator
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ full_namespace }}"
+    resource_definition: "{{ lookup('template',
+      'templates/subscription.yml.j2',
+      template_vars=dict(operator_namespace=full_namespace,manifest_data=manifest_data,channel=channel,install_mode=item)) }}"
+- name: Get Current CSV
+  kubernetes.core.k8s_info:
+    namespace: "{{ full_namespace }}"
+    name: "{{ [channel.name, manifest_data.packageName, item | lower, 'subscription'] | join('-') }}"
+    api_version: operators.coreos.com/v1alpha1
+    kind: Subscription
+  register: subscription
+- name: Get CSV Completed
+  kubernetes.core.k8s_info:
+    namespace: "{{ full_namespace }}"
+    name: "{{ subscription.resources[0].status.currentCSV }}"
+    api_version: operators.coreos.com/v1alpha1
+    kind: ClusterServiceVersion
+  register: result
+  until: result.resources[0].status.phase == "Succeeded"
+  retries: 5
+  delay: 10
+- name: Clean up namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    label_selectors:
+      - opdev=opcap
+    state: absent
+  when: cleanup is defined and cleanup
