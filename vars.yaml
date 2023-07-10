@@ -1,5 +1,5 @@
 auditplan: ["operatorinstall"]
-packages: []
+packages: ['operator-certification-operator']
 allinstallmodes: false
 extracrdirectory: ""
 detailedreports: false

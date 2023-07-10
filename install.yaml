@@ -55,6 +55,9 @@
     api_version: operators.coreos.com/v1alpha1
     kind: Subscription
   register: subscription
+  until: subscription.resources[0].status.currentCSV is defined
+  retries: 10
+  delay: 10
 - name: Get CSV Completed
   kubernetes.core.k8s_info:
     namespace: "{{ full_namespace }}"
@@ -62,8 +65,8 @@
     api_version: operators.coreos.com/v1alpha1
     kind: ClusterServiceVersion
   register: result
-  until: result.resources[0].status.phase == "Succeeded"
-  retries: 5
+  until: result.resources[0] is defined and result.resources[0].status.phase == "Succeeded"
+  retries: 10
   delay: 10
 - name: Clean up namespace
   kubernetes.core.k8s:
