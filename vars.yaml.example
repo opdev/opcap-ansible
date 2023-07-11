@@ -1,5 +1,8 @@
 auditplan: ["operatorinstall"]
-packages: ['operator-certification-operator']
+# For a specific set of packages, set here
+# packages: ['operator-certification-operator']
+# To run an entire catalog, set package to empty
+packages: []
 allinstallmodes: false
 extracrdirectory: ""
 detailedreports: false
