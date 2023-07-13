@@ -16,20 +16,20 @@ or if you prefer set:
 K8S_AUTH_KUBECONFIG=<path to your kubeconfig file>
 ```
 
-Copy `var.yaml.example` to `vars.yaml` and modify accordingly. If `packages` value is empty, it will pull ALL packages from the catalog source.
+Copy `var.yml.example` to `vars.yml` and modify accordingly. If `packages` value is empty, it will pull ALL packages from the catalog source.
 
 ### Run playbooks with Ansible Navigator
 
 The fastest way to get started is to run the playbooks via `ansible-navigator` with an Ansible execution environment container image:
 
 ```
-ansible-navigator run audits.yaml --container-engine podman --eei quay.io/opdev/opcap-ansible-ee:latest -e @vars.yaml --penv K8S_AUTH_VERIFY_SSL --penv K8S_AUTH_API_KEY --penv K8S_AUTH_HOST -m stdout
+ansible-navigator run audits.yml --container-engine podman --eei quay.io/opdev/opcap-ansible-ee:latest -e @vars.yml --penv K8S_AUTH_VERIFY_SSL --penv K8S_AUTH_API_KEY --penv K8S_AUTH_HOST -m stdout
 ````
 
 or if you prefer to provide a kubeconfig:
 
 ```
-ansible-navigator run audits.yaml --container-engine podman --eei quay.io/opdev/opcap-ansible-ee:latest -e @vars.yaml --senv K8S_AUTH_KUBECONFIG=/dir/kubeconfig --eev /dir:/dir -m stdout
+ansible-navigator run audits.yml --container-engine podman --eei quay.io/opdev/opcap-ansible-ee:latest -e @vars.yml --senv K8S_AUTH_KUBECONFIG=/dir/kubeconfig --eev /dir:/dir -m stdout
 ```
 
 ### Run playbooks with Ansible Playbook
@@ -38,7 +38,7 @@ ansible-navigator run audits.yaml --container-engine podman --eei quay.io/opdev/
 You may prefer to run playbooks via `ansible-playbook` although this method requires proper dependencies installed on localhost:
 
 ```
-ansible-playbook -e @vars.yaml audits.yaml
+ansible-playbook -e @vars.yml audits.yml
 ```
 
 ### Misc
@@ -51,3 +51,6 @@ ansible-builder build  --container-runtime=podman --tag=opcap-ansible-ee --prune
 
 
 
+## Development
+
+* Filenames should use the '.yml' suffix in favor of '.yaml'
