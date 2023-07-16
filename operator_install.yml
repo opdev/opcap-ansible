@@ -12,5 +12,5 @@
   ansible.builtin.set_fact:
     namespace: "{{ manifest_data.packageName | replace('.', '-') | lower | truncate(40) }}"
 - name: Install Operator with each install type
-  ansible.builtin.include_tasks: install.yaml
+  ansible.builtin.include_tasks: install.yml
   loop: "{{ install_modes }}"

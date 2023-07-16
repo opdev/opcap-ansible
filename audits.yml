@@ -35,8 +35,8 @@
                                 map(attribute='status') |
                                 selectattr('catalogSource', 'in', '[' + catalog_source + ']') |
                                 list }}"
-    - name: Execute operator_install.yaml for each opernshift_sub_info
-      ansible.builtin.include_tasks: operator_install.yaml
+    - name: Execute operator_install.yml for each opernshift_sub_info
+      ansible.builtin.include_tasks: operator_install.yml
       loop: "{{ openshift_sub_info }}"
       loop_control:
         loop_var: manifest_data
