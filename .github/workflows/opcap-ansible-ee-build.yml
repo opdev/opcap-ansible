@@ -1,0 +1,49 @@
+name: opcap-ansible ee build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/execution-environment.yml'
+      - '**/requirements.yml'
+      - '**/requirements.txt'
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: deploy
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install python requirements (ansible-builder)
+        run: pip install -r requirements.txt
+
+      - name: Log in to quay.io
+        id: registry-quay
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Build image
+        id: build-image
+        run: |
+          ansible-builder build -v 3 \
+          --tag=opcap-ansible-ee:latest \
+          --tag=opcap-ansible-ee:${{ github.sha }}
+
+      - name: Push To quay.io
+        id: push-to-quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: opcap-ansible-ee
+          tags: |
+            latest
+            ${{ github.sha }}
+          registry: quay.io/opdev
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
