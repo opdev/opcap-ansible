@@ -68,6 +68,9 @@
   until: result.resources[0] is defined and result.resources[0].status.phase == "Succeeded"
   retries: 10
   delay: 10
+- name: Run FIPS enabled tests
+  ansible.builtin.include_tasks: fips_assessment.yml
+  when: fips_assessment is defined and fips_assessment  
 - name: Clean up namespace
   kubernetes.core.k8s:
     api_version: v1
