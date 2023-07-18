@@ -9,3 +9,7 @@ detailedreports: false
 catalog_source: certified-operators
 catalog_source_namespace: openshift-marketplace
 cleanup: true
+# To run operator tests on FIPS enabled clusters
+#  1. list only packages that have corresponding tests on packages var
+#  2. uncomment and set fips_assessment to true below
+# fips_assessment: true
