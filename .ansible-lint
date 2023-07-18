@@ -1,4 +1,4 @@
-profile: production
+profile: moderate
 exclude_paths:
   - requirements.yml
   - execution-environment.yml
