@@ -58,19 +58,39 @@
   until: subscription.resources[0].status.currentCSV is defined
   retries: 10
   delay: 10
-- name: Get CSV Completed
-  kubernetes.core.k8s_info:
-    namespace: "{{ full_namespace }}"
-    name: "{{ subscription.resources[0].status.currentCSV }}"
-    api_version: operators.coreos.com/v1alpha1
-    kind: ClusterServiceVersion
-  register: result
-  until: result.resources[0] is defined and result.resources[0].status.phase == "Succeeded"
-  retries: 10
-  delay: 10
+- name: Get CSV and report
+  block:
+    - name: Get CSV Completed
+      kubernetes.core.k8s_info:
+        namespace: "{{ full_namespace }}"
+        name: "{{ subscription.resources[0].status.currentCSV }}"
+        api_version: operators.coreos.com/v1alpha1
+        kind: ClusterServiceVersion
+      register: result
+      until: result.resources[0] is defined and result.resources[0].status.phase == "Succeeded"
+      retries: 30
+      delay: 10
+      failed_when: result.resources is not defined or result.resources | length == 0 or result.resources[0].status.phase != "Succeeded"
+  rescue:
+    - name: Set timeout
+      ansible.builtin.set_fact:
+        operator_timeout: true
 - name: Run FIPS enabled tests
   ansible.builtin.include_tasks: fips_assessment.yml
   when: fips_assessment | default(false)
+- name: Create stat
+  ansible.builtin.set_fact:
+    package:
+      name: "{{ manifest_data.packageName }}"
+      channel: "{{ channel.name }}"
+      install_mode: "{{ item }}"
+      result: "{{ (operator_timeout | default(false)) | ternary('timeout', result.resources[0].status.phase | default('')) }}"
+      message: "{{ result.resources[0].status.message | default('') }}"
+      reason: "{{ result.resources[0].status.reason | default('') }}"
+- name: Push stats
+  ansible.builtin.set_stats:
+    data:
+      operators: "{{ [package] }}"
 - name: Clean up namespace
   kubernetes.core.k8s:
     api_version: v1
