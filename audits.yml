@@ -3,19 +3,35 @@
   hosts: localhost
   gather_facts: false
   tasks:
+    - name: Only gather date_time to facts
+      ansible.builtin.setup:
+        filter:
+          - ansible_date_time
+    - name: Set current date to stats
+      ansible.builtin.set_stats:
+        data:
+          current_date: "{{ ansible_date_time.date }}"
     - name: Get K8S cluster info
       kubernetes.core.k8s_cluster_info:
       register: ocp_version
       no_log: true
     - name: Save cluster version
-      ansible.builtin.set_fact:
-        k8s_cluster_version: "{{ ocp_version.version.server.kubernetes }}"
+      ansible.builtin.set_stats:
+        data:
+          k8s_cluster_version: "{{ ocp_version.version.server.kubernetes }}"
     - name: Get OpenShift cluster info
       kubernetes.core.k8s_info:
         api_version: "config.openshift.io/v1"
         kind: ClusterVersion
         name: version
       register: openshift_cluster_version
+      failed_when: >
+        (openshift_cluster_version.resources[0] is not defined) or
+        (openshift_cluster_version.resources[0] == "")
+    - name: Save OpenShift cluster info
+      ansible.builtin.set_stats:
+        data:
+          openshift_cluster_version: "{{ openshift_cluster_version.resources[0].status.history[0].version }}"
     - name: Get PackageManifests
       kubernetes.core.k8s_info:
         api_version: "packages.operators.coreos.com/v1"
@@ -45,7 +61,7 @@
         repo: https://github.com/opdev/fips-assessments.git
         dest: "{{ fips_repo }}"
       when: fips_assessment | default(false)
-    - name: Execute operator_install.yml for each opernshift_sub_info
+    - name: Execute operator_install.yml for each openshift_sub_info
       ansible.builtin.include_tasks: operator_install.yml
       loop: "{{ openshift_sub_info }}"
       loop_control:
