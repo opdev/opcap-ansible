@@ -17,3 +17,12 @@
 # for local dev vars file
 vars.yaml
 vars.yml
+
+# audits-artifact
+audits-artifact*
+
+# logs for ansible-navigator
+ansible-navigator.log
+
+# vscode settings and etc.
+.vscode/
