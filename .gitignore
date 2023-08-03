@@ -26,3 +26,6 @@ ansible-navigator.log
 
 # vscode settings and etc.
 .vscode/
+
+# JetBrains
+.idea/
