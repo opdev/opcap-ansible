@@ -40,14 +40,14 @@
     namespace: "{{ full_namespace }}"
     resource_definition: "{{ lookup('template',
       'templates/operator-group.yml.j2',
-      template_vars=dict(operator_namespace=full_namespace,manifest_data=manifest_data,channel=channel,install_mode=item)) }}"
+      template_vars=dict(operator_namespace=full_namespace, manifest_data=manifest_data, channel=channel, install_mode=item)) }}"
 - name: Create Subscription for operator
   kubernetes.core.k8s:
     state: present
     namespace: "{{ full_namespace }}"
     resource_definition: "{{ lookup('template',
       'templates/subscription.yml.j2',
-      template_vars=dict(operator_namespace=full_namespace,manifest_data=manifest_data,channel=channel,install_mode=item)) }}"
+      template_vars=dict(operator_namespace=full_namespace, manifest_data=manifest_data, channel=channel, install_mode=item)) }}"
 - name: Get Current CSV
   kubernetes.core.k8s_info:
     namespace: "{{ full_namespace }}"
