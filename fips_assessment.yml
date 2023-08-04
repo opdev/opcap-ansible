@@ -8,8 +8,11 @@
 # Include the path for each fips assessment test below
 # they should be found at https://github.com/opdev/fips-assessments/<operator>/tasks/
 # Make sure your tests have proper cleanup tasks
-- name: openshift serverless fips assessment
-  ansible.builtin.include_tasks: /tmp/fips-assessments/openshift-serverless/tasks/main.yml
+# Select your package in the vars file and uncomment the appropriate test below
+# - name: openshift serverless fips assessment
+#   ansible.builtin.include_tasks: /tmp/fips-assessments/openshift-serverless/tasks/main.yml
+# - name: openshift gitops fips assessment
+#   ansible.builtin.include_tasks: /tmp/fips-assessments/openshift-gitops/tasks/main.yml
 
 # Clean up task files
 - name: delete temporary files from fips-assessment
