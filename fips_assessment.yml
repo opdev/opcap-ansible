@@ -11,6 +11,9 @@
 - name: openshift serverless fips assessment
   ansible.builtin.include_tasks: /tmp/fips-assessments/openshift-serverless/tasks/main.yml
 
+- name: openshift-pipelines fips assessment
+  ansible.builtin.include_tasks: /tmp/fips-assessments/openshift-pipelines/tasks/main.yml
+
 # Clean up task files
 - name: delete temporary files from fips-assessment
   ansible.builtin.file:
