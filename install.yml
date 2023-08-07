@@ -40,14 +40,14 @@
     namespace: "{{ full_namespace }}"
     resource_definition: "{{ lookup('template',
       'templates/operator-group.yml.j2',
-      template_vars=dict(operator_namespace=full_namespace,manifest_data=manifest_data,channel=channel,install_mode=item)) }}"
+      template_vars=dict(operator_namespace=full_namespace, manifest_data=manifest_data, channel=channel, install_mode=item)) }}"
 - name: Create Subscription for operator
   kubernetes.core.k8s:
     state: present
     namespace: "{{ full_namespace }}"
     resource_definition: "{{ lookup('template',
       'templates/subscription.yml.j2',
-      template_vars=dict(operator_namespace=full_namespace,manifest_data=manifest_data,channel=channel,install_mode=item)) }}"
+      template_vars=dict(operator_namespace=full_namespace, manifest_data=manifest_data, channel=channel, install_mode=item)) }}"
 - name: Get Current CSV
   kubernetes.core.k8s_info:
     namespace: "{{ full_namespace }}"
@@ -70,7 +70,7 @@
   delay: 10
 - name: Run FIPS enabled tests
   ansible.builtin.include_tasks: fips_assessment.yml
-  when: fips_assessment is defined and fips_assessment  
+  when: fips_assessment is defined and fips_assessment
 - name: Clean up namespace
   kubernetes.core.k8s:
     api_version: v1
