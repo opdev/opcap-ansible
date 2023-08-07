@@ -1,0 +1,11 @@
+profile: moderate
+exclude_paths:
+  - requirements.yml
+  - execution-environment.yml
+  - .github/
+  - OWNERS
+  - README.md
+  - LICENSE
+parseable: true
+strict: true
+offline: false
