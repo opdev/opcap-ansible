@@ -13,3 +13,4 @@ cleanup: true
 #  1. list only packages that have corresponding tests on packages var
 #  2. uncomment and set fips_assessment to true below
 # fips_assessment: true
+install_operands: false

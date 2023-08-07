@@ -13,4 +13,6 @@
     namespace: "{{ manifest_data.packageName | replace('.', '-') | lower | truncate(40) }}"
 - name: Install Operator with each install type
   ansible.builtin.include_tasks: install.yml
+  vars:
+    install_operands: install_operands
   loop: "{{ install_modes }}"

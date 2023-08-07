@@ -68,6 +68,12 @@
   until: result.resources[0] is defined and result.resources[0].status.phase == "Succeeded"
   retries: 10
   delay: 10
+- name: Install operands
+  ansible.builtin.include_tasks: operand_install.yml
+  vars:
+    csv: "{{ result.resources[0] }}"
+    namespace: "{{ full_namespace }}"
+  when: install_operands | default(false)
 - name: Run FIPS enabled tests
   ansible.builtin.include_tasks: fips_assessment.yml
   when: fips_assessment is defined and fips_assessment
