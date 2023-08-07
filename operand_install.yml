@@ -1,0 +1,15 @@
+---
+- name: Extract ALM examples from CSV
+  ansible.builtin.set_fact:
+    alm_examples: "{{ csv.metadata.annotations['alm-examples'] }}"
+- name: Print it out
+  ansible.builtin.debug:
+    var: alm_examples
+- name: Install operands from ALM examples
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ alm_item }}"
+    namespace: "{{ namespace }}"
+  loop: "{{ alm_examples }}"
+  loop_control:
+    loop_var: alm_item

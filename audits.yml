@@ -37,6 +37,8 @@
                                 list }}"
     - name: Execute operator_install.yml for each opernshift_sub_info
       ansible.builtin.include_tasks: operator_install.yml
+      vars:
+        install_operands: install_operands | default(false)
       loop: "{{ openshift_sub_info }}"
       loop_control:
         loop_var: manifest_data
