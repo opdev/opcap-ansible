@@ -6,6 +6,7 @@
     - name: Get K8S cluster info
       kubernetes.core.k8s_cluster_info:
       register: ocp_version
+      no_log: true
     - name: Save cluster version
       ansible.builtin.set_fact:
         k8s_cluster_version: "{{ ocp_version.version.server.kubernetes }}"
@@ -20,6 +21,7 @@
         api_version: "packages.operators.coreos.com/v1"
         kind: PackageManifest
       register: package_manifest_list
+      no_log: true
     - name: Filter package_manifest_list
       ansible.builtin.set_fact:
         manifest_list: "{{ package_manifest_list.resources |
@@ -35,8 +37,20 @@
                                 map(attribute='status') |
                                 selectattr('catalogSource', 'in', '[' + catalog_source + ']') |
                                 list }}"
+    - name: Set fact for fips-assessment repo path
+      ansible.builtin.set_fact:
+        fips_repo: "{{ fips_repo_base_path | default('/tmp') }}/fips-assessments/"
+    - name: Git checkout fips-assessment tests
+      ansible.builtin.git:
+        repo: https://github.com/opdev/fips-assessments.git
+        dest: "{{ fips_repo }}"
+      when: fips_assessment | default(false)
     - name: Execute operator_install.yml for each opernshift_sub_info
       ansible.builtin.include_tasks: operator_install.yml
       loop: "{{ openshift_sub_info }}"
       loop_control:
         loop_var: manifest_data
+    - name: Delete temporary files from fips-assessment
+      ansible.builtin.file:
+        path: "{{ fips_repo }}"
+        state: absent
