@@ -1,18 +1,15 @@
 ---
-# Checkout fips-assessments repo for testing tasks
-- name: Git checkout fips-assessment tests
-  ansible.builtin.git:
-    repo: https://github.com/opdev/fips-assessments.git
-    dest: /tmp/fips-assessments/
+- name: Check for a matching directory in the fips-assessments repo
+  ansible.builtin.stat:
+    path: "{{ fips_repo }}/{{ package_name }}/tasks/main.yml"
+  register: path_exists
 
-# Include the path for each fips assessment test below
-# they should be found at https://github.com/opdev/fips-assessments/<operator>/tasks/
-# Make sure your tests have proper cleanup tasks
-- name: Openshift serverless fips assessment
-  ansible.builtin.include_tasks: /tmp/fips-assessments/openshift-serverless/tasks/main.yml
+- name: If path exists, execute main.yml
+  ansible.builtin.include_tasks: "{{ fips_repo }}/{{ package_name }}/tasks/main.yml"
+  register: fips_assessment_result
+  when: path_exists.stat.exists
 
-# Clean up task files
-- name: Delete temporary files from fips-assessment
-  ansible.builtin.file:
-    path: /tmp/fips-assessments/
-    state: absent
+- name: Print out the result for now
+  ansible.builtin.debug:
+    var: fips_assessment_result
+  when: path_exists.stat.exists
