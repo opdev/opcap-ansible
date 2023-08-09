@@ -13,3 +13,10 @@ cleanup: true
 #  1. list only packages that have corresponding tests on packages var
 #  2. uncomment and set fips_assessment to true below
 # fips_assessment: true
+# One can override the fips assessment repo and branch to
+# facilitate testing new fips assessments
+# fips_repo_url: https://github.com/opdev/fips-assessments
+# fips_repo_branch: main
+# fips_git_update: false <--- If you want to use the repo from a directory
+# fips_repo_base_path: /some/base-location <--- Use with the above
+# fips_git_cleanup: false <--- If using the above, you will probably want this false

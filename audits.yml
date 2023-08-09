@@ -58,8 +58,10 @@
         fips_repo: "{{ fips_repo_base_path | default('/tmp') }}/fips-assessments/"
     - name: Git checkout fips-assessment tests
       ansible.builtin.git:
-        repo: https://github.com/opdev/fips-assessments.git
+        repo: "{{ fips_repo_url | default('https://github.com/opdev/fips-assessments') }}"
+        version: "{{ fips_repo_branch | default('main') }}"
         dest: "{{ fips_repo }}"
+        update: "{{ fips_git_update | default(true) }}"
       when: fips_assessment | default(false)
     - name: Execute operator_install.yml for each openshift_sub_info
       ansible.builtin.include_tasks: operator_install.yml
@@ -70,3 +72,6 @@
       ansible.builtin.file:
         path: "{{ fips_repo }}"
         state: absent
+      when:
+        - fips_assessment | default(false)
+        - fips_git_cleanup | default(false)

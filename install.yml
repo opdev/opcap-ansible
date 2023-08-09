@@ -77,6 +77,14 @@
         operator_timeout: true
 - name: Run FIPS enabled tests
   ansible.builtin.include_tasks: fips_assessment.yml
+  vars:
+    target_namespace: "{{ item in ['OwnNamespace'] | ternary(full_namespace, [full_namespace, 'targetns1'] | join('-')) }}"
+  when: fips_assessment | default(false)
+  register: fips_results
+- name: Push FIPS stats
+  ansible.builtin.set_stats:
+    data:
+      fips: "{{ [fips_results] }}"
   when: fips_assessment | default(false)
 - name: Create stat
   ansible.builtin.set_fact:
@@ -91,6 +99,38 @@
   ansible.builtin.set_stats:
     data:
       operators: "{{ [package] }}"
+- name: Clean up addition namespace - SingleNamespace or MultiNamespace
+  kubernetes.core.k8s:
+    name: "{{ [full_namespace, 'targetns1'] | join('-') }}"
+    api_version: v1
+    kind: Namespace
+    definition:
+      metadata:
+        labels:
+          opdev: opcap
+    state: absent
+    wait: true
+    wait_timeout: 60
+    wait_sleep: 10
+  when:
+    - item in ["SingleNamespace", "MultiNamespace"]
+    - cleanup is defined and cleanup
+- name: Clean up additional namespace - SingleNamespace or MultiNamespace
+  kubernetes.core.k8s:
+    name: "{{ [full_namespace, 'targetns2'] | join('-') }}"
+    api_version: v1
+    kind: Namespace
+    definition:
+      metadata:
+        labels:
+          opdev: opcap
+    state: absent
+    wait: true
+    wait_timeout: 60
+    wait_sleep: 10
+  when:
+    - item in ["MultiNamespace"]
+    - cleanup is defined and cleanup
 - name: Clean up namespace
   kubernetes.core.k8s:
     api_version: v1
