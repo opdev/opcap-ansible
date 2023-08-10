@@ -1,10 +1,13 @@
 ---
 - name: Generate full namespace
   ansible.builtin.set_fact:
-    full_namespace: "opcap-{{ namespace }}-{{ item | lower }}"
+    install_namespace: "opcap-{{ namespace }}-{{ item | lower }}"
+- name: Generate target namespace
+  ansible.builtin.set_fact:
+    target_namespace: "{{ (item not in ['OwnNamespace']) | ternary([install_namespace, 'targetns1'] | join('-'), install_namespace) }}"
 - name: Create main namespace
   kubernetes.core.k8s:
-    name: "{{ full_namespace }}"
+    name: "{{ install_namespace }}"
     api_version: v1
     kind: Namespace
     definition:
@@ -12,9 +15,9 @@
         labels:
           opdev: opcap
     state: present
-- name: Create additional namespace - SingleNamespace or MultiNamespace
+- name: Create additional namespace - Not OwnNamespace
   kubernetes.core.k8s:
-    name: "{{ [full_namespace, 'targetns1'] | join('-') }}"
+    name: "{{ target_namespace }}"
     api_version: v1
     kind: Namespace
     definition:
@@ -22,35 +25,20 @@
         labels:
           opdev: opcap
     state: present
-  when: item in ["SingleNamespace", "MultiNamespace"]
-- name: Create additional namespace - SingleNamespace or MultiNamespace
-  kubernetes.core.k8s:
-    name: "{{ [full_namespace, 'targetns2'] | join('-') }}"
-    api_version: v1
-    kind: Namespace
-    definition:
-      metadata:
-        labels:
-          opdev: opcap
-    state: present
-  when: item in ["MultiNamespace"]
+  when: item not in ["OwnNamespace"]
 - name: Create operator group in kubernetes.core.k8s
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ full_namespace }}"
-    resource_definition: "{{ lookup('template',
-      'templates/operator-group.yml.j2',
-      template_vars=dict(operator_namespace=full_namespace, manifest_data=manifest_data, channel=channel, install_mode=item)) }}"
+    namespace: "{{ install_namespace }}"
+    resource_definition: "{{ lookup('template', 'templates/operator-group.yml.j2', template_vars=dict(install_mode=item)) }}"
 - name: Create Subscription for operator
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ full_namespace }}"
-    resource_definition: "{{ lookup('template',
-      'templates/subscription.yml.j2',
-      template_vars=dict(operator_namespace=full_namespace, manifest_data=manifest_data, channel=channel, install_mode=item)) }}"
+    namespace: "{{ install_namespace }}"
+    resource_definition: "{{ lookup('template', 'templates/subscription.yml.j2', template_vars=dict(install_mode=item)) }}"
 - name: Get Current CSV
   kubernetes.core.k8s_info:
-    namespace: "{{ full_namespace }}"
+    namespace: "{{ install_namespace }}"
     name: "{{ [channel.name, manifest_data.packageName, item | lower, 'subscription'] | join('-') }}"
     api_version: operators.coreos.com/v1alpha1
     kind: Subscription
@@ -62,7 +50,7 @@
   block:
     - name: Get CSV Completed
       kubernetes.core.k8s_info:
-        namespace: "{{ full_namespace }}"
+        namespace: "{{ install_namespace }}"
         name: "{{ subscription.resources[0].status.currentCSV }}"
         api_version: operators.coreos.com/v1alpha1
         kind: ClusterServiceVersion
@@ -77,8 +65,6 @@
         operator_timeout: true
 - name: Run FIPS enabled tests
   ansible.builtin.include_tasks: fips_assessment.yml
-  vars:
-    target_namespace: "{{ item in ['OwnNamespace'] | ternary(full_namespace, [full_namespace, 'targetns1'] | join('-')) }}"
   when: fips_assessment | default(false)
   register: fips_results
 - name: Push FIPS stats
@@ -99,9 +85,9 @@
   ansible.builtin.set_stats:
     data:
       operators: "{{ [package] }}"
-- name: Clean up addition namespace - SingleNamespace or MultiNamespace
+- name: Clean up additional namespace - Not OwnNamespace
   kubernetes.core.k8s:
-    name: "{{ [full_namespace, 'targetns1'] | join('-') }}"
+    name: "{{ target_namespace }}"
     api_version: v1
     kind: Namespace
     definition:
@@ -113,23 +99,7 @@
     wait_timeout: 60
     wait_sleep: 10
   when:
-    - item in ["SingleNamespace", "MultiNamespace"]
-    - cleanup is defined and cleanup
-- name: Clean up additional namespace - SingleNamespace or MultiNamespace
-  kubernetes.core.k8s:
-    name: "{{ [full_namespace, 'targetns2'] | join('-') }}"
-    api_version: v1
-    kind: Namespace
-    definition:
-      metadata:
-        labels:
-          opdev: opcap
-    state: absent
-    wait: true
-    wait_timeout: 60
-    wait_sleep: 10
-  when:
-    - item in ["MultiNamespace"]
+    - item not in ["OwnNamespace"]
     - cleanup is defined and cleanup
 - name: Clean up namespace
   kubernetes.core.k8s:
