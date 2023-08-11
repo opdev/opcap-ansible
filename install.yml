@@ -67,10 +67,17 @@
   ansible.builtin.include_tasks: fips_assessment.yml
   when: fips_assessment | default(false)
   register: fips_results
+- name: Create FIPS result
+  ansible.builtin.set_fact:
+    assessment_stat:
+      result: "{{ assessment_result | default('result not reported') }}"
+      package_name: "{{ package_name }}"
+      install_type: "{{ item }}"
+  when: fips_assessment | default(false)
 - name: Push FIPS stats
   ansible.builtin.set_stats:
     data:
-      fips: "{{ [fips_results] }}"
+      fips_assessments: "{{ omit if assessment_stat is not defined else [assessment_stat] }}"
   when: fips_assessment | default(false)
 - name: Create stat
   ansible.builtin.set_fact:

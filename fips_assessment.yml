@@ -8,8 +8,3 @@
   ansible.builtin.include_tasks: "{{ fips_repo }}/{{ package_name }}/tasks/main.yml"
   register: fips_assessment_result
   when: path_exists.stat.exists
-
-- name: Print out the result for now
-  ansible.builtin.debug:
-    var: fips_assessment_result
-  when: path_exists.stat.exists
