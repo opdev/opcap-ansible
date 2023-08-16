@@ -8,9 +8,6 @@
 - name: Get supported InstallModes
   ansible.builtin.set_fact:
     install_modes: "{{ channel.currentCSVDesc.installModes | selectattr('supported') | map(attribute='type') }}"
-- name: Generate namespace from package name
-  ansible.builtin.set_fact:
-    namespace: "{{ manifest_data.packageName | replace('.', '-') | lower | truncate(40) }}"
 - name: Install Operator with each install type
   ansible.builtin.include_tasks: install.yml
   vars:

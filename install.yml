@@ -1,10 +1,10 @@
 ---
 - name: Generate full namespace
   ansible.builtin.set_fact:
-    install_namespace: "opcap-{{ namespace }}-{{ item | lower }}"
+    install_namespace: "{{ manifest_data.packageName | sha1 | truncate(8, False, '', 0) }}-{{ item | truncate(1, False, '', 0) | lower }}"
 - name: Generate target namespace
   ansible.builtin.set_fact:
-    target_namespace: "{{ (item not in ['OwnNamespace']) | ternary([install_namespace, 'targetns1'] | join('-'), install_namespace) }}"
+    target_namespace: "{{ (item not in ['OwnNamespace']) | ternary([install_namespace, 'ns1'] | join('-'), install_namespace) }}"
 - name: Create main namespace
   kubernetes.core.k8s:
     name: "{{ install_namespace }}"
