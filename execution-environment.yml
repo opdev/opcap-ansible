@@ -10,3 +10,9 @@ dependencies:
   ansible_runner:
     package_pip: ansible-runner==2.3.2
   galaxy: requirements.yml
+
+additional_build_steps:
+  append_final:
+    - RUN curl -O https://mirror.openshift.com/pub/rhacs/assets/4.1.2/bin/linux/roxctl
+    - RUN chmod +x roxctl
+    - RUN mv roxctl /usr/local/bin/roxctl
