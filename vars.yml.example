@@ -1,22 +1,40 @@
-auditplan: ["operatorinstall"]
-# For a specific set of packages, set here
-# packages: ['operator-certification-operator']
-# To run an entire catalog, set package to empty
-packages: []
-allinstallmodes: false
-extracrdirectory: ""
-detailedreports: false
-catalog_source: certified-operators
-catalog_source_namespace: openshift-marketplace
+# For FIPS assessements
+packages:
+  - name: 3scale-operator
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+    role_name_override: threescale_operator
+  - name: advanced-cluster-management
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: amq-streams
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: ansible-automation-platform-operator
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: datagrid
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: devspaces
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: eap
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: openshift-gitops-operator
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: openshift-pipelines-operator-rh
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: rhacs-operator
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: rhsso-operator
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
+  - name: serverless-operator
+    catalog_source: redhat-operators
+    catalog_source_namespace: openshift-marketplace
 cleanup: true
-# To run operator tests on FIPS enabled clusters
-#  1. list only packages that have corresponding tests on packages var
-#  2. uncomment and set fips_assessment to true below
-# fips_assessment: true
-# One can override the fips assessment repo and branch to
-# facilitate testing new fips assessments
-# fips_repo_url: https://github.com/opdev/fips-assessments
-# fips_repo_branch: main
-# fips_git_update: false <--- If you want to use the repo from a directory
-# fips_repo_base_path: /some/base-location <--- Use with the above
-# fips_git_cleanup: false <--- If using the above, you will probably want this false

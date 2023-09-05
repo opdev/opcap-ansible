@@ -1,11 +1,11 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: {{ [channel.name, manifest_data.packageName, install_mode | lower, "subscription"] | join('-') }}
+  name: {{ [package_manifest.name, package_name, operator_install_mode | lower, "subscription"] | join('-') }}
   namespace: {{ install_namespace }}
 spec:
-  name: {{ manifest_data.packageName }}
+  name: {{ package_name }}
   source: {{ catalog_source }}
   sourceNamespace: {{ catalog_source_namespace }}
-  channel: {{ channel.name }}
+  channel: {{ package_manifest.name }}
   installPlanApproval: Automatic

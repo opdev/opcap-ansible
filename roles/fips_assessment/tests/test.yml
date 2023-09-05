@@ -1,0 +1,6 @@
+---
+- name: Role fips_assessment tests
+  hosts: localhost
+  remote_user: root
+  roles:
+    - fips_assessment

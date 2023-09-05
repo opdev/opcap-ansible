@@ -1,0 +1,11 @@
+---
+- name: Delete Subscription for operator
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ install_namespace }}"
+    resource_definition: "{{ lookup('template', 'subscription.yml.j2') }}"
+- name: Delete operator group in kubernetes.core.k8s
+  kubernetes.core.k8s:
+    state: absent
+    namespace: "{{ install_namespace }}"
+    resource_definition: "{{ lookup('template', 'operator-group.yml.j2') }}"

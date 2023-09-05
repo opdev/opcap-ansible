@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: {{ [package_manifest.name, package_name, operator_install_mode | lower, "subscription"] | join('-') }}
+  namespace: {{ install_namespace }}
+spec:
+  {{ "targetNamespaces:" if operator_install_mode != "AllNamespaces" }}
+  {{+ "  - %s" % target_namespace if operator_install_mode == "SingleNamespace" or operator_install_mode == "MultiNamespace" }}
+  {{+ "  - %s" % install_namespace if operator_install_mode == "OwnNamespace" }}
+  upgradeStrategy: Default
