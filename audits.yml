@@ -1,5 +1,5 @@
 ---
-- name: Gather subscription data
+- name: Gather "inventory" of packages
   hosts: localhost
   gather_facts: false
   tasks:
@@ -41,46 +41,92 @@
     - name: Set fact
       ansible.builtin.set_fact:
         cluster_base_url: "{{ cluster_dns.resources[0].spec.baseDomain }}"
+    - name: Build package "inventory"
+      ansible.builtin.add_host:
+        name: "{{ item.name }}"
+        catalog_source: "{{ item.catalog_source }}"
+        catalog_source_namespace: "{{ item.catalog_source_namespace }}"
+        cluster_base_url: "{{ cluster_base_url }}"
+        role_name_override: "{{ item.role_name_override | default(omit) }}"
+        groups: "packages"
+        ansible_ssh_host: localhost
+        ansible_connection: local
+      loop: "{{ packages }}"
+      when: packages | default([]) | length > 0
+
+- name: Run assessments
+  hosts: packages
+  gather_facts: false
+  pre_tasks:
+    - name: Cluster base url?
+      ansible.builtin.debug:
+        var: cluster_base_url
+    - name: Alias inventory_hostname for easier readability
+      ansible.builtin.set_fact:
+        package: "{{ inventory_hostname }}"
+        package_role: "{{ role_name_override | default(inventory_hostname | replace('-', '_')) }}"
     - name: Get PackageManifests
       kubernetes.core.k8s_info:
         api_version: "packages.operators.coreos.com/v1"
         kind: PackageManifest
-      register: package_manifest_list
-      no_log: true
-    - name: Filter package_manifest_list
+        namespace: "{{ hostvars[package]['catalog_source_namespace'] }}"
+        name: "{{ package }}"
+        label_selectors:
+          - "catalog = {{ hostvars[package]['catalog_source'] }}"
+      register: package_manifest_data
+      failed_when: >
+        (package_manifest_data.resources | length == 0) or
+        (package_manifest_data.resources[0].status is not defined)
+    - name: Set package_manifest fact
       ansible.builtin.set_fact:
-        manifest_list: "{{ package_manifest_list.resources |
-                           selectattr('status.packageName', 'in', packages | list) }}"
-      when: packages | default([]) | length > 0
-    - name: Make manifest_list when no packages defined
+        package_manifest: "{{ package_manifest_data.resources[0].status.channels |
+                              selectattr('name', 'eq', package_manifest_data.resources[0].status.defaultChannel) |
+                              first }}"
+        package_name: "{{ package_manifest_data.resources[0].status.packageName }}"
+    - name: Generate namespace prefix
       ansible.builtin.set_fact:
-        manifest_list: "{{ package_manifest_list.resources | list }}"
-      when: packages | default([]) | length == 0
-    - name: Get subscription data from OpenShift
-      ansible.builtin.set_fact:
-        openshift_sub_info: "{{ manifest_list |
-                                map(attribute='status') |
-                                selectattr('catalogSource', 'in', '[' + catalog_source + ']') |
-                                list }}"
-    - name: Set fact for fips-assessment repo path
-      ansible.builtin.set_fact:
-        fips_repo: "{{ fips_repo_base_path | default('/tmp') }}/fips-assessments/"
-    - name: Git checkout fips-assessment tests
-      ansible.builtin.git:
-        repo: "{{ fips_repo_url | default('https://github.com/opdev/fips-assessments') }}"
-        version: "{{ fips_repo_branch | default('main') }}"
-        dest: "{{ fips_repo }}"
-        update: "{{ fips_git_update | default(true) }}"
-      when: fips_assessment | default(false)
-    - name: Execute operator_install.yml for each openshift_sub_info
-      ansible.builtin.include_tasks: operator_install.yml
-      loop: "{{ openshift_sub_info }}"
-      loop_control:
-        loop_var: manifest_data
-    - name: Delete temporary files from fips-assessment
-      ansible.builtin.file:
-        path: "{{ fips_repo }}"
-        state: absent
-      when:
-        - fips_assessment | default(false)
-        - fips_git_cleanup | default(false)
+        install_namespace_prefix: "{{ package_name | sha1 | truncate(8, False, '', 0) }}"
+  roles:
+    - role: fips_assessment
+      install_mode: "OwnNamespace"
+      install_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      target_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'OwnNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - ownnamespace
+    - role: fips_assessment
+      install_mode: "SingleNamespace"
+      install_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
+      target_namespace: "{{ [install_namespace_prefix, 's', 'ns1'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'SingleNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - never
+        - singlenamespace
+    - role: fips_assessment
+      install_mode: "MultiNamespace"
+      install_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
+      target_namespace: "{{ [install_namespace_prefix, 'm', 'ns1'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'MultiNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - never
+        - multinamespace
+    - role: fips_assessment
+      install_mode: "AllNamespaces"
+      install_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
+      target_namespace: "{{ [install_namespace_prefix, 'a', 'ns1'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'AllNamespaces') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - never
+        - allnamespaces

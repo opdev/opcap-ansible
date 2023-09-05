@@ -1,0 +1,11 @@
+---
+- name: Manage namespace
+  kubernetes.core.k8s:
+    name: "{{ namespace }}"
+    api_version: v1
+    kind: Namespace
+    definition:
+      metadata:
+        labels: "{{ labels | default([]) | items2dict or omit }}"
+    state: "{{ namespace_state | default('present') }}"
+    wait: true

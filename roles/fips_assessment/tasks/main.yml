@@ -1,0 +1,70 @@
+---
+# tasks file for fips_assessment
+- name: Create install namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    namespace: "{{ install_namespace }}"
+    labels:
+      - key: opdev
+        value: opcap
+      - key: opcap
+        value: fips
+
+- name: Create target namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    namespace: "{{ target_namespace }}"
+    labels:
+      - key: opdev
+        value: opcap
+      - key: opcap
+        value: fips
+
+- name: Install operator
+  ansible.builtin.include_role:
+    name: operator
+  vars:
+    operator_role_mode: install
+    operator_install_mode: "{{ install_mode }}"
+
+- name: Execute fips-assessment role
+  ansible.builtin.include_role:
+    role: "{{ package_role }}"
+
+- name: Create FIPS result
+  ansible.builtin.set_fact:
+    assessment_stat:
+      result: "{{ assessment_result | default('result not reported') }}"
+      package_name: "{{ package_name }}"
+      install_type: "{{ install_mode }}"
+
+- name: Push FIPS stats
+  ansible.builtin.set_stats:
+    data:
+      fips_assessments: "{{ omit if assessment_stat is not defined else [assessment_stat] }}"
+
+- name: Clean up operator
+  ansible.builtin.include_role:
+    name: operator
+  vars:
+    operator_role_mode: cleanup
+    operator_install_mode: "{{ install_mode }}"
+  when: cleanup | default(true)
+
+- name: Clean up target namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    namespace: "{{ target_namespace }}"
+    namespace_state: absent
+  when: cleanup | default(true)
+
+- name: Clean up target namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    namespace: "{{ install_namespace }}"
+    namespace_state: absent
+  when: cleanup | default(true)

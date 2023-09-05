@@ -1,0 +1,8 @@
+---
+# handlers file for k8s_namespace
+- name: Clean up namespace
+  kubernetes.core.k8s:
+    name: "{{ namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: absent

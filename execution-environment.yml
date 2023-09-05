@@ -6,9 +6,10 @@ build_arg_defaults:
 
 dependencies:
   ansible_core:
-    package_pip: ansible-core==2.13.10
+    package_pip: ansible-core>=2.13.10
   ansible_runner:
-    package_pip: ansible-runner==2.3.2
+    package_pip: ansible-runner>=2.3.2
+  python: requirements.txt
   galaxy: requirements.yml
 
 additional_build_steps:

@@ -1,0 +1,8 @@
+---
+- name: Install operator
+  ansible.builtin.include_tasks: install.yml
+  when: operator_role_mode == 'install'
+
+- name: Clean up operator
+  ansible.builtin.include_tasks: cleanup.yml
+  when: operator_role_mode == 'cleanup'
