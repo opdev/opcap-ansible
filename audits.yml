@@ -32,6 +32,14 @@
       ansible.builtin.set_stats:
         data:
           openshift_cluster_version: "{{ openshift_cluster_version.resources[0].status.history[0].version }}"
+    - name: Set cluster base URL
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: DNS
+        name: cluster
+      register: cluster_dns
+      vars:
+        cluster_base_url: cluster_dns.resources[0].spec.baseDomain
     - name: Get PackageManifests
       kubernetes.core.k8s_info:
         api_version: "packages.operators.coreos.com/v1"
