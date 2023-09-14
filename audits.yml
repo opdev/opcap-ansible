@@ -38,8 +38,9 @@
         kind: DNS
         name: cluster
       register: cluster_dns
-      vars:
-        cluster_base_url: cluster_dns.resources[0].spec.baseDomain
+    - name: Set fact
+      ansible.builtin.set_fact:
+        cluster_base_url: "{{ cluster_dns.resources[0].spec.baseDomain }}"
     - name: Get PackageManifests
       kubernetes.core.k8s_info:
         api_version: "packages.operators.coreos.com/v1"
