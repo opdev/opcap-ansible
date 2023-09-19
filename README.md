@@ -59,6 +59,12 @@ You can quickly run playbooks within your Python virtual environment:
 ansible-playbook -e @vars.yml audits.yml
 ```
 
+or
+
+```
+ansible-navigator run audits.yml --ee false -e @vars.yml
+```
+
 
 ### Build a new execution environment image
 
