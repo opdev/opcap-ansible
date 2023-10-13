@@ -2,16 +2,16 @@
 - name: Create operator group in kubernetes.core.k8s
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ install_namespace }}"
+    namespace: "{{ operator_install_namespace }}"
     resource_definition: "{{ lookup('template', 'operator-group.yml.j2') }}"
 - name: Create Subscription for operator
   kubernetes.core.k8s:
     state: present
-    namespace: "{{ install_namespace }}"
+    namespace: "{{ operator_install_namespace }}"
     resource_definition: "{{ lookup('template', 'subscription.yml.j2') }}"
 - name: Get Current CSV
   kubernetes.core.k8s_info:
-    namespace: "{{ install_namespace }}"
+    namespace: "{{ operator_install_namespace }}"
     name: "{{ [package_manifest.name, package_name, operator_install_mode | lower, 'subscription'] | join('-') }}"
     api_version: operators.coreos.com/v1alpha1
     kind: Subscription
@@ -23,7 +23,7 @@
   block:
     - name: Get CSV Completed
       kubernetes.core.k8s_info:
-        namespace: "{{ install_namespace }}"
+        namespace: "{{ operator_install_namespace }}"
         name: "{{ subscription.resources[0].status.currentCSV }}"
         api_version: operators.coreos.com/v1alpha1
         kind: ClusterServiceVersion
