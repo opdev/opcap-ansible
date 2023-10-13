@@ -88,9 +88,9 @@
         install_namespace_prefix: "{{ package_name | sha1 | truncate(8, False, '', 0) }}"
   roles:
     - role: fips_assessment
-      install_mode: "OwnNamespace"
-      install_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
-      target_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      fips_assessment_install_mode: "OwnNamespace"
+      fips_assessment_install_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      fips_assessment_target_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
       when: >
         package_manifest.currentCSVDesc.installModes |
         selectattr('type', 'eq', 'OwnNamespace') |
@@ -98,35 +98,32 @@
       tags:
         - ownnamespace
     - role: fips_assessment
-      install_mode: "SingleNamespace"
-      install_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
-      target_namespace: "{{ [install_namespace_prefix, 's', 'ns1'] | join('-') }}"
+      fips_assessment_install_mode: "SingleNamespace"
+      fips_assessment_install_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
+      fips_assessment_target_namespace: "{{ [install_namespace_prefix, 's', 'ns1'] | join('-') }}"
       when: >
         package_manifest.currentCSVDesc.installModes |
         selectattr('type', 'eq', 'SingleNamespace') |
         selectattr('supported', 'eq', true)
       tags:
-        - never
         - singlenamespace
     - role: fips_assessment
-      install_mode: "MultiNamespace"
-      install_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
-      target_namespace: "{{ [install_namespace_prefix, 'm', 'ns1'] | join('-') }}"
+      fips_assessment_install_mode: "MultiNamespace"
+      fips_assessment_install_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
+      fips_assessment_target_namespace: "{{ [install_namespace_prefix, 'm', 'ns1'] | join('-') }}"
       when: >
         package_manifest.currentCSVDesc.installModes |
         selectattr('type', 'eq', 'MultiNamespace') |
         selectattr('supported', 'eq', true)
       tags:
-        - never
         - multinamespace
     - role: fips_assessment
-      install_mode: "AllNamespaces"
-      install_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
-      target_namespace: "{{ [install_namespace_prefix, 'a', 'ns1'] | join('-') }}"
+      fips_assessment_install_mode: "AllNamespaces"
+      fips_assessment_install_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
+      fips_assessment_target_namespace: "{{ [install_namespace_prefix, 'a', 'ns1'] | join('-') }}"
       when: >
         package_manifest.currentCSVDesc.installModes |
         selectattr('type', 'eq', 'AllNamespaces') |
         selectattr('supported', 'eq', true)
       tags:
-        - never
         - allnamespaces
