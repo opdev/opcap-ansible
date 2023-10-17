@@ -8,6 +8,7 @@ on:
       - '**/execution-environment.yml'
       - '**/requirements.yml'
       - '**/requirements.txt'
+      - '**/ansible.cfg'
   workflow_dispatch:
   
 jobs:
@@ -21,20 +22,20 @@ jobs:
       - name: Install python requirements (ansible-builder)
         run: pip install -r requirements.txt
 
-      - name: Log in to quay.io
-        id: registry-quay
-        uses: redhat-actions/podman-login@v1
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
       - name: Build image
         id: build-image
         run: |
           ansible-builder build -v 3 \
           --tag=opcap-ansible-ee:latest \
           --tag=opcap-ansible-ee:${{ github.sha }}
+          
+      - name: Login to quay.io
+        id: registry-quay
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Push To quay.io
         id: push-to-quay

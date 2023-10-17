@@ -4,16 +4,22 @@ version: 3
 build_arg_defaults:
   ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--force --verbose'
 
+images:
+  base_image:
+    name: ghcr.io/ansible-community/community-ee-minimal:latest
+
 dependencies:
-  ansible_core:
-    package_pip: ansible-core>=2.13.10
-  ansible_runner:
-    package_pip: ansible-runner>=2.3.2
   python: requirements.txt
   galaxy: requirements.yml
 
+additional_build_files:
+   - src: ansible.cfg
+     dest: configs
+
 additional_build_steps:
+  prepend_galaxy:
+    - ADD _build/configs/ansible.cfg ~/.ansible.cfg
   append_final:
-    - RUN curl -O https://mirror.openshift.com/pub/rhacs/assets/4.1.2/bin/linux/roxctl
-    - RUN chmod +x roxctl
-    - RUN mv roxctl /usr/local/bin/roxctl
+    - RUN cd /usr/local/bin && \
+          curl -O https://mirror.openshift.com/pub/rhacs/assets/4.1.2/bin/linux/roxctl && \
+          chmod +x /usr/local/bin/roxctl
