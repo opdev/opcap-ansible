@@ -29,3 +29,6 @@ ansible-navigator.log
 
 # JetBrains
 .idea/
+
+# Ignore local ansible navigator configs
+ansible-navigator.yaml
