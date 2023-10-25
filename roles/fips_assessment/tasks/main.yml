@@ -37,6 +37,8 @@
   vars:
     install_namespace: "{{ fips_assessment_install_namespace }}"
     target_namespace: "{{ fips_assessment_target_namespace }}"
+  tags:
+    - fips_assessment
 
 - name: Create FIPS result
   ansible.builtin.set_fact:
@@ -44,11 +46,15 @@
       result: "{{ assessment_result | default('result not reported') }}"
       package_name: "{{ package_name }}"
       install_type: "{{ fips_assessment_install_mode }}"
+  tags:
+    - fips_assessment
 
 - name: Push FIPS stats
   ansible.builtin.set_stats:
     data:
       fips_assessments: "{{ omit if assessment_stat is not defined else [assessment_stat] }}"
+  tags:
+    - fips_assessment
 
 - name: Clean up operator
   ansible.builtin.include_role:
