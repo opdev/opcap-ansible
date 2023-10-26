@@ -6,6 +6,6 @@
     kind: Namespace
     definition:
       metadata:
-        labels: "{{ labels | default([]) | items2dict or omit }}"
+        labels: "{{ k8s_namespace_labels | default([]) | items2dict or omit }}"
     state: "{{ k8s_namespace_state | default('present') }}"
     wait: true
