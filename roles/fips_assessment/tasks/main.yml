@@ -33,7 +33,7 @@
 
 - name: Execute fips-assessment role
   ansible.builtin.include_role:
-    name: "{{ package_role }}"
+    name: "opdev.fips_assessments.{{ package_role }}"
   vars:
     install_namespace: "{{ fips_assessment_install_namespace }}"
     target_namespace: "{{ fips_assessment_target_namespace }}"

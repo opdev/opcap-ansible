@@ -9,10 +9,22 @@
 # the run, so you can still validate what would be output.
 show_custom_stats = true
 
-# This will be necessary until we get the fips_assessment collection going
-roles_path = ./roles:../fips-assessments/roles
-
 # callbacks_enabled = ansible.posix.timer,ansible.posix.profile_tasks,ansible.posix.profile_roles
 
 forks = 20
+
+[galaxy]
+server_list = published, rh-certified, community
+
+[galaxy_server.published]
+url=https://<insert hub url here>/api/galaxy/
+token=<insert token here>
+
+[galaxy_server.rh-certified]
+url=https://<insert hub url here>/api/galaxy/content/rh-certified/
+token=<insert token here>
+
+[galaxy_server.community]
+url=https://<insert hub url here>/api/galaxy/content/community/
+token=<insert token here>
 
