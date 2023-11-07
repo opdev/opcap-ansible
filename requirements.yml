@@ -1,6 +1,4 @@
 ---
 collections:
+  - name: opdev.fips_assessments
   - name: kubernetes.core
-
-# Once this is publish in the private automation hub, we can use this directly
-#  - name: opdev.fips_assessments

@@ -17,9 +17,11 @@ additional_build_files:
      dest: configs
 
 additional_build_steps:
+  prepend_builder: |
+    RUN pip3 install --upgrade pip setuptools
   prepend_galaxy:
-    - ADD _build/configs/ansible.cfg ~/.ansible.cfg
-  append_final:
-    - RUN cd /usr/local/bin && \
-          curl -O https://mirror.openshift.com/pub/rhacs/assets/4.1.2/bin/linux/roxctl && \
-          chmod +x /usr/local/bin/roxctl
+    - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
+  append_final: |
+    RUN cd /usr/local/bin && \
+        curl -O https://mirror.openshift.com/pub/rhacs/assets/4.1.2/bin/linux/roxctl && \
+        chmod +x /usr/local/bin/roxctl

@@ -18,6 +18,9 @@
 vars.yaml
 vars.yml
 
+# Do not include ansible.cfg as it could contain secrets
+ansible.cfg
+
 # audits-artifact
 audits-artifact*
 
@@ -32,3 +35,10 @@ ansible-navigator.log
 
 # Ignore local ansible navigator configs
 ansible-navigator.yaml
+
+# Ignore collections from galaxy
+collections/
+
+# Ignore context from ansible-builder
+context/
+
