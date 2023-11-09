@@ -1,4 +1,25 @@
 ---
+- name: Create install namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    k8s_namespace_namespace: "{{ operator_install_namespace }}"
+    labels:
+      - key: opdev
+        value: opcap
+      - key: opcap
+        value: fips
+
+- name: Create target namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    k8s_namespace_namespace: "{{ operator_target_namespace }}"
+    labels:
+      - key: opdev
+        value: opcap
+      - key: opcap
+        value: fips
 - name: Create operator group in kubernetes.core.k8s
   kubernetes.core.k8s:
     state: present

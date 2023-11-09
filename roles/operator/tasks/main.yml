@@ -6,3 +6,5 @@
 - name: Clean up operator
   ansible.builtin.include_tasks: cleanup.yml
   when: operator_role_mode == 'cleanup'
+  tags:
+    - cleanup

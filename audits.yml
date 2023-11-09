@@ -40,6 +40,9 @@
         kind: DNS
         name: cluster
       register: cluster_dns
+      tags:
+        - inventory
+        - cleanup
     - name: Set fact
       ansible.builtin.set_fact:
         cluster_base_url: "{{ cluster_dns.resources[0].spec.baseDomain }}"
@@ -47,9 +50,15 @@
       ansible.builtin.include_tasks:
         file: packages.yml
       when: packages | default([]) | length == 0
+      tags:
+        - inventory
+        - cleanup
     - name: Filter skip list from package list
       ansible.builtin.set_fact:
         filtered_packages: "{{ packages | rejectattr('name', 'in', skip_list) }}"
+      tags:
+        - inventory
+        - cleanup
     - name: Build package "inventory"
       ansible.builtin.add_host:
         name: "{{ item.name }}"
@@ -60,12 +69,18 @@
         groups: "packages"
         ansible_ssh_host: localhost
         ansible_connection: local
+      tags:
+        - inventory
+        - cleanup
       loop: "{{ filtered_packages }}"
       when: filtered_packages | default([]) | length > 0
     - name: Fail if we have no package list at this point
       ansible.builtin.fail:
         msg: No package list available
       when: filtered_packages | default([]) | length == 0
+      tags:
+        - inventory
+        - cleanup
 
 - name: Run assessments
   hosts: packages
@@ -83,6 +98,8 @@
       ansible.builtin.set_fact:
         package: "{{ inventory_hostname }}"
         package_role: "{{ role_name_override | default(inventory_hostname | replace('-', '_')) }}"
+      tags:
+        - cleanup
     - name: Get PackageManifests
       kubernetes.core.k8s_info:
         api_version: "packages.operators.coreos.com/v1"
@@ -95,16 +112,34 @@
       failed_when: >
         (package_manifest_data.resources | length == 0) or
         (package_manifest_data.resources[0].status is not defined)
+      tags:
+        - cleanup
     - name: Set package_manifest fact
       ansible.builtin.set_fact:
         package_manifest: "{{ package_manifest_data.resources[0].status.channels |
                               selectattr('name', 'eq', package_manifest_data.resources[0].status.defaultChannel) |
                               first }}"
         package_name: "{{ package_manifest_data.resources[0].status.packageName }}"
+      tags:
+        - cleanup
     - name: Generate namespace prefix
       ansible.builtin.set_fact:
         install_namespace_prefix: "{{ package_name | sha1 | truncate(8, False, '', 0) }}"
+      tags:
+        - cleanup
   roles:
+    # OwnNamespace
+    - role: operator
+      operator_role_mode: install
+      operator_install_mode: "OwnNamespace"
+      operator_install_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'OwnNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - ownnamespace
     - role: fips_assessment
       fips_assessment_install_mode: "OwnNamespace"
       fips_assessment_install_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
@@ -115,6 +150,33 @@
         selectattr('supported', 'eq', true)
       tags:
         - ownnamespace
+        - fips_assessment
+    - role: operator
+      operator_role_mode: cleanup
+      operator_install_mode: "OwnNamespece"
+      operator_install_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 'o'] | join('-') }}"
+      when: >
+        cleanup | default(true) and
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'OwnNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - ownnamespace
+        - cleanup
+
+    # SingleNamepsace
+    - role: operator
+      operator_role_mode: install
+      operator_install_mode: "SingleNamespace"
+      operator_install_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'SingleNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - singlenamespace
     - role: fips_assessment
       fips_assessment_install_mode: "SingleNamespace"
       fips_assessment_install_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
@@ -125,6 +187,33 @@
         selectattr('supported', 'eq', true)
       tags:
         - singlenamespace
+        - fips_assessment
+    - role: operator
+      operator_role_mode: cleanup
+      operator_install_mode: "SingleNamespece"
+      operator_install_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 's'] | join('-') }}"
+      when: >
+        cleanup | default(true) and
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'SingleNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - singlenamespace
+        - cleanup
+
+    # MultiNamespace
+    - role: operator
+      operator_role_mode: install
+      operator_install_mode: "MultiNamespace"
+      operator_install_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'MultiNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - multinamespace
     - role: fips_assessment
       fips_assessment_install_mode: "MultiNamespace"
       fips_assessment_install_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
@@ -135,6 +224,33 @@
         selectattr('supported', 'eq', true)
       tags:
         - multinamespace
+        - fips_assessment
+    - role: operator
+      operator_role_mode: cleanup
+      operator_install_mode: "MultiNamespece"
+      operator_install_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 'm'] | join('-') }}"
+      when: >
+        cleanup | default(true) and
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'MultiNamespace') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - multinamespace
+        - cleanup
+
+    # AllNamespaces
+    - role: operator
+      operator_role_mode: install
+      operator_install_mode: "AllNamespaces"
+      operator_install_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
+      when: >
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'AllNamespaces') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - allnamespaces
     - role: fips_assessment
       fips_assessment_install_mode: "AllNamespaces"
       fips_assessment_install_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
@@ -145,3 +261,17 @@
         selectattr('supported', 'eq', true)
       tags:
         - allnamespaces
+        - fips_assessment
+    - role: operator
+      operator_role_mode: cleanup
+      operator_install_mode: "AllNamespeces"
+      operator_install_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
+      operator_target_namespace: "{{ [install_namespace_prefix, 'a'] | join('-') }}"
+      when: >
+        cleanup | default(true) and
+        package_manifest.currentCSVDesc.installModes |
+        selectattr('type', 'eq', 'AllNamespaces') |
+        selectattr('supported', 'eq', true)
+      tags:
+        - allnamespaces
+        - cleanup

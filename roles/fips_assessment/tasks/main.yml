@@ -1,36 +1,5 @@
 ---
 # tasks file for fips_assessment
-- name: Create install namespace
-  ansible.builtin.include_role:
-    role: k8s_namespace
-  vars:
-    k8s_namespace_namespace: "{{ fips_assessment_install_namespace }}"
-    labels:
-      - key: opdev
-        value: opcap
-      - key: opcap
-        value: fips
-
-- name: Create target namespace
-  ansible.builtin.include_role:
-    role: k8s_namespace
-  vars:
-    k8s_namespace_namespace: "{{ fips_assessment_target_namespace }}"
-    labels:
-      - key: opdev
-        value: opcap
-      - key: opcap
-        value: fips
-
-- name: Install operator
-  ansible.builtin.include_role:
-    name: operator
-  vars:
-    operator_role_mode: install
-    operator_install_mode: "{{ fips_assessment_install_mode }}"
-    operator_install_namespace: "{{ fips_assessment_install_namespace }}"
-    operator_target_namespace: "{{ fips_assessment_target_namespace }}"
-
 - name: Execute fips-assessment role
   ansible.builtin.include_role:
     name: "opdev.fips_assessments.{{ package_role }}"
@@ -55,29 +24,3 @@
       fips_assessments: "{{ omit if assessment_stat is not defined else [assessment_stat] }}"
   tags:
     - fips_assessment
-
-- name: Clean up operator
-  ansible.builtin.include_role:
-    name: operator
-  vars:
-    operator_role_mode: cleanup
-    operator_install_mode: "{{ fips_assessment_install_mode }}"
-    operator_install_namespace: "{{ fips_assessment_install_namespace }}"
-    operator_target_namespace: "{{ fips_assessment_target_namespace }}"
-  when: cleanup | default(true)
-
-- name: Clean up target namespace
-  ansible.builtin.include_role:
-    role: k8s_namespace
-  vars:
-    k8s_namespace_namespace: "{{ fips_assessment_target_namespace }}"
-    k8s_namespace_state: absent
-  when: cleanup | default(true)
-
-- name: Clean up target namespace
-  ansible.builtin.include_role:
-    role: k8s_namespace
-  vars:
-    k8s_namespace_namespace: "{{ fips_assessment_install_namespace }}"
-    k8s_namespace_state: absent
-  when: cleanup | default(true)
