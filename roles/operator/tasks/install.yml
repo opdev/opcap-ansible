@@ -28,7 +28,11 @@
         api_version: operators.coreos.com/v1alpha1
         kind: ClusterServiceVersion
       register: result
-      until: result.resources[0] is defined and result.resources[0].status.phase == "Succeeded"
+      until:
+        - result.resources[0] is defined
+        - result.resources[0].status is defined
+        - result.resources[0].status.phase is defined
+        - result.resources[0].status.phase == "Succeeded"
       retries: 30
       delay: 10
       failed_when: result.resources is not defined or result.resources | length == 0 or result.resources[0].status.phase != "Succeeded"
