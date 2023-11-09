@@ -41,6 +41,10 @@
     - name: Set fact
       ansible.builtin.set_fact:
         cluster_base_url: "{{ cluster_dns.resources[0].spec.baseDomain }}"
+    - name: Build packages list when no packages specified
+      ansible.builtin.include_tasks:
+        file: packages.yml
+      when: packages | default([]) | length == 0
     - name: Build package "inventory"
       ansible.builtin.add_host:
         name: "{{ item.name }}"
@@ -53,10 +57,19 @@
         ansible_connection: local
       loop: "{{ packages }}"
       when: packages | default([]) | length > 0
+    - name: Fail if we have no package list at this point
+      ansible.builtin.fail:
+        msg: No package list available
+      when: packages | default([]) | length == 0
 
 - name: Run assessments
   hosts: packages
   gather_facts: false
+  serial:
+    - 1
+    - 5
+    - "{{ max_batch_size | default(10) }}"
+  max_fail_percentage: 99
   pre_tasks:
     - name: Cluster base url?
       ansible.builtin.debug:
