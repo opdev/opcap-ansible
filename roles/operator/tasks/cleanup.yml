@@ -4,8 +4,30 @@
     state: absent
     namespace: "{{ operator_install_namespace }}"
     resource_definition: "{{ lookup('template', 'subscription.yml.j2') }}"
+  tags:
+    - cleanup
 - name: Delete operator group in kubernetes.core.k8s
   kubernetes.core.k8s:
     state: absent
     namespace: "{{ operator_install_namespace }}"
     resource_definition: "{{ lookup('template', 'operator-group.yml.j2') }}"
+  tags:
+    - cleanup
+- name: Clean up target namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    k8s_namespace_namespace: "{{ operator_target_namespace }}"
+    k8s_namespace_state: absent
+  when: cleanup | default(true)
+  tags:
+    - cleanup
+- name: Clean up target namespace
+  ansible.builtin.include_role:
+    role: k8s_namespace
+  vars:
+    k8s_namespace_namespace: "{{ operator_install_namespace }}"
+    k8s_namespace_state: absent
+  when: cleanup | default(true)
+  tags:
+    - cleanup
