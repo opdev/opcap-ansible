@@ -18,13 +18,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Add ansible.cfg from secrets
-        run: |
-          echo -n ${ANSIBLE_CFG} | base64 --decode > ansible.cfg
-        shell: bash
-        env:
-          ANSIBLE_CFG: "${{ secrets.ANSIBLE_CFG }}"
-
       - name: Install python requirements (ansible-builder)
         run: pip install -r requirements.txt
 
