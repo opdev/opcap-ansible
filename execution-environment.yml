@@ -12,15 +12,11 @@ dependencies:
   python: requirements.txt
   galaxy: requirements.yml
 
-additional_build_files:
-   - src: ansible.cfg
-     dest: configs
-
 additional_build_steps:
+  prepend_base: |
+    RUN dnf install -y git
   prepend_builder: |
     RUN pip3 install --upgrade pip setuptools
-  prepend_galaxy:
-    - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
   append_final: |
     RUN cd /usr/local/bin && \
         curl -O https://mirror.openshift.com/pub/rhacs/assets/4.1.2/bin/linux/roxctl && \

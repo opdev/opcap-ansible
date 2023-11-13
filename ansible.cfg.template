@@ -13,18 +13,3 @@ show_custom_stats = true
 
 forks = 20
 
-[galaxy]
-server_list = published, rh-certified, community
-
-[galaxy_server.published]
-url=https://<insert hub url here>/api/galaxy/
-token=<insert token here>
-
-[galaxy_server.rh-certified]
-url=https://<insert hub url here>/api/galaxy/content/rh-certified/
-token=<insert token here>
-
-[galaxy_server.community]
-url=https://<insert hub url here>/api/galaxy/content/community/
-token=<insert token here>
-

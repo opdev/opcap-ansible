@@ -1,4 +1,6 @@
 ---
 collections:
-  - name: opdev.fips_assessments
+  - name: https://github.com/opdev/fips-assessments.git
+    type: git
+    version: main
   - name: kubernetes.core
