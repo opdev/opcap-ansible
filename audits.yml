@@ -1,6 +1,8 @@
 ---
 - name: Gather "inventory" of packages
   hosts: localhost
+  vars_files:
+    - vars/skip_list.yml
   gather_facts: false
   tasks:
     - name: Only gather date_time to facts
@@ -45,6 +47,9 @@
       ansible.builtin.include_tasks:
         file: packages.yml
       when: packages | default([]) | length == 0
+    - name: Filter skip list from package list
+      ansible.builtin.set_fact:
+        filtered_packages: "{{ packages | rejectattr('name', 'in', skip_list) }}"
     - name: Build package "inventory"
       ansible.builtin.add_host:
         name: "{{ item.name }}"
@@ -55,12 +60,12 @@
         groups: "packages"
         ansible_ssh_host: localhost
         ansible_connection: local
-      loop: "{{ packages }}"
-      when: packages | default([]) | length > 0
+      loop: "{{ filtered_packages }}"
+      when: filtered_packages | default([]) | length > 0
     - name: Fail if we have no package list at this point
       ansible.builtin.fail:
         msg: No package list available
-      when: packages | default([]) | length == 0
+      when: filtered_packages | default([]) | length == 0
 
 - name: Run assessments
   hosts: packages
